@@ -1,0 +1,116 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+model User {
+  id             String        @id @default(cuid())  // userId as String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  imageUrl       String?
+  firstName      String?
+  lastName       String?
+  emailAddress   String        @unique
+  credits        Int           @default(150)
+  userToProjects UserToProject[] // Relationship with Project
+  questionsAsked Question[]      // Relationship with Question
+}
+
+model Project {
+  id                  String                  @id @default(cuid())   // projectId as String
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  name                String
+  accessToken         String?
+  githubUrl           String
+  deletedAt           DateTime?
+  userToProjects      UserToProject[]         // Relationship with User
+  commits             Commit[]                // Relationship with Commit
+  SourceCodeEmbedding SourceCodeEmbedding[]   // Relationship with SourceCodeEmbedding
+  savedQuestions      Question[]              // Relationship with Question
+  meetings            Meeting[]               // Relationship with Meeting
+}
+
+model UserToProject {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String   // userId as String
+  projectId String
+  user      User     @relation(fields: [userId], references: [id])  // Foreign key relationship to User
+  project   Project  @relation(fields: [projectId], references: [id]) // Foreign key relationship to Project
+  @@unique([userId, projectId])  // Composite unique constraint
+}
+
+model Question {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  question       String
+  answer         String
+  fileReferences Json?
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id])  // Foreign key relationship to Project
+  userId         String   // userId as String
+  user           User     @relation(fields: [userId], references: [id]) // Foreign key relationship to User
+}
+
+model Commit {
+  id               String   @id @default(cuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id])  // Foreign key relationship to Project
+  commitMessage    String
+  commitHash       String
+  commitAuthorName String
+  commitAuthorAvatar String
+  commitDate       DateTime
+  summary          String
+}
+
+model SourceCodeEmbedding {
+  id               String                      @id @default(cuid())
+  summaryEmbedding Unsupported("vector(768)")?  // PostgreSQL vector extension
+  sourceCode       String
+  fileName         String
+  summary          String
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id])  // Foreign key relationship to Project
+}
+
+model Meeting {
+  id         String        @id @default(cuid())
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  name       String
+  meetingUrl String        // Cloudinary storage URL
+  projectId  String
+  project    Project       @relation(fields: [projectId], references: [id])  // Foreign key relationship to Project
+  status     MeetingStatus @default(PROCESSING)
+  issues     Issue[]       // Relationship with Issue
+}
+
+enum MeetingStatus {
+  PROCESSING
+  COMPLETED
+}
+
+model Issue {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  start       String
+  end         String
+  gist        String
+  headline    String
+  summary     String
+  meetingId   String
+  meeting     Meeting  @relation(fields: [meetingId], references: [id])  // Foreign key relationship to Meeting
+}
