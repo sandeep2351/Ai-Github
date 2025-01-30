@@ -20,6 +20,7 @@ export const POST = async (req: Request) => {
                 updatedAt: new Date(), 
             },
             create: {
+                id,
                 emailAddress,
                 firstName,
                 lastName,
