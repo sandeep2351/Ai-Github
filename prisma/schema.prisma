@@ -10,7 +10,7 @@ datasource db {
 }
 
 model User {
-  id             String        @id @default(cuid())  // userId as String
+  id             String        @id @default(cuid())  
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   imageUrl       String?
@@ -18,7 +18,7 @@ model User {
   lastName       String?
   emailAddress   String        @unique
   credits        Int           @default(150)
-  userToProjects UserToProject[] // Relationship with Project
+  userToProjects UserToProject[] 
   questionsAsked Question[]      // Relationship with Question
 }
 
